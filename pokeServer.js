@@ -44,6 +44,10 @@ app.post("/", function(request, res) {
   P.getPokemonByName(pokemon.trim().toLowerCase())
     .then((response) => {
     let output = "<h2>Pokemon Stats</h2><br>";
+
+    output += `<img src="${response.sprites.front_default}" alt="pokemon_front" height=200></img>`;
+    output += `<img src="${response.sprites.back_default}" alt="pokemon_back" height=200></img>`;
+
     output += "<table border=1>";
     output += `<tr><td>Name</td><td>${response.name}</td></tr>`;
 
