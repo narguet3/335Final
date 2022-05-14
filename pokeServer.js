@@ -81,8 +81,9 @@ app.post("/", function(request, res) {
     output += "</table>";
     res.render("displayPokemon", {table: output});
   })
-  .catch((error) => {
+  .catch(() => {
     console.log("Pokemon not found");
+    res.redirect('back');
   });
   
 });
@@ -105,6 +106,7 @@ app.post("/team", (request, response) => {
     })
     .catch((error) => {
       console.log("Pokemon not found");
+      window.location.reload();
     });
 
 });
