@@ -94,8 +94,18 @@ app.get("/team", (request, response) => {
 app.post("/team", (request, response) => {
   let {pokemon} =  request.body;
 
-  // Add pokemon to Mongo database 
-  // Display the user's team
+  P.getPokemonByName(pokemon.trim().toLowerCase())
+    .then((response) => {
+      let name = response.name;
+      let sprite = response.sprites.front_default;
+
+      // Add pokemon name and sprite to Mongo database 
+      // Display the user's team by listing the database and response.render
+    })
+    .catch((error) => {
+      console.log("Pokemon not found");
+    });
+
 });
   
 let webServer = http.createServer(app).listen(PORT); 
