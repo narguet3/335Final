@@ -1,12 +1,22 @@
 //All requires and imports
 process.stdin.setEncoding("utf8");
-const http = require('http');
-const path = require("path");
-const express = require("express");
-let fs = require('fs');
-let bodyParser = require("body-parser");
-require("dotenv").config({ path: path.resolve(__dirname, '.env') });
-let { MongoClient, ServerApiVersion } = require('mongodb');
+import http from 'http';
+import path from 'path';
+import express from 'express';
+import bodyParser from 'body-parser';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+import dotenv from 'dotenv';
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+import { MongoClient, ServerApiVersion } from 'mongodb';
+// Module for Pokemon API
+import Pokedex from 'pokedex-promise-v2';
+const P = new Pokedex();
 
 //Setting up MongoDB
 const userName = process.env.MONGO_DB_USERNAME;
@@ -28,25 +38,60 @@ app.get("/", (request, response) => {
 
 app.use(bodyParser.urlencoded({extended:false}));
 
-app.post("/", function(request, response) {
+app.post("/", function(request, res) {
   let {pokemon} =  request.body;
 
-  (async () => {
-    try {
-      await client.connect();
+  P.getPokemonByName(pokemon.trim().toLowerCase())
+    .then((response) => {
+    let output = "<h2>Pokemon Stats</h2><br>";
+    output += "<table border=1>";
+    output += `<tr><td>Name</td><td>${response.name}</td></tr>`;
 
-      await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).insertOne({name: name, email: email, gpa: gpa, info: info});
-      response.render("applicationConfirm", {name: name, email, gpa, info, homeLink: home});
-    } 
-    
-    catch (error) {
-      console.log("ERROR, ERROR: " + error);
-    }
+    output += `<tr><td>Type(s)</td><td>`;
+    response.types.forEach(element => {
+      output += `${element.type.name}, `;
+    });
+    output = output.slice(0, -2);
+    output += `</td></tr>`;
 
-    finally {
-      await client.close();
-    }
-  })();
+    output += `<tr><td>Moves</td><td>`;
+    response.moves.forEach(element => {
+      output += `${element.move.name}, `;
+    });
+    output = output.slice(0, -2);
+    output += `</td></tr>`;
+
+    output += `<tr><td>Abilities</td><td>`;
+    response.abilities.forEach(element => {
+      output += `${element.ability.name}, `;
+    });
+    output = output.slice(0, -2);
+    output += `</td></tr>`;
+
+    output += `<tr><td>Base Stats</td><td>`;
+    response.stats.forEach(element => {
+      output += `${element.stat.name}: ${element.base_stat}<br>`;
+    });
+    output += `</td></tr>`;
+
+    output += "</table>";
+    res.render("displayPokemon", {table: output});
+  })
+  .catch((error) => {
+    console.log("Pokemon not found");
+  });
+  
+});
+
+app.get("/team", (request, response) => {
+  response.render("team");
+});
+
+app.post("/team", (request, response) => {
+  let {pokemon} =  request.body;
+
+  // Add pokemon to Mongo database 
+  // Display the user's team
 });
   
 let webServer = http.createServer(app).listen(PORT); 

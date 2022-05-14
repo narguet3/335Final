@@ -20,5 +20,6 @@
     "http": "^0.0.1-security",
     "mongodb": "^4.6.0",
     "node": "^17.7.2"
-  }
+  }, 
+  "type": "module"
 }
