@@ -99,6 +99,7 @@ app.post("/team", (request, response) => {
       let name = response.name;
       let sprite = response.sprites.front_default;
 
+      // For Nick Papi
       // Add pokemon name and sprite to Mongo database 
       // Display the user's team by listing the database and response.render
     })
