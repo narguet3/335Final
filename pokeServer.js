@@ -33,7 +33,7 @@ const PORT = process.env.PORT || 5000;
 
 //Setting up index page
 app.get("/", (request, response) => {
-    response.render("index");
+    response.render("index", {error:""});
   });
 
 app.use(bodyParser.urlencoded({extended:false}));
@@ -82,8 +82,8 @@ app.post("/", function(request, res) {
     res.render("displayPokemon", {table: output});
   })
   .catch(() => {
-    console.log("Pokemon not found");
-    res.redirect('back');
+    let msg = "Pokemon not found.<br>List of all Pokemon: <a href=\"https://www.serebii.net/pokemon/nationalpokedex.shtml\">https://www.serebii.net/pokemon/nationalpokedex.shtml</a>";
+    res.render('index', {error:msg});
   });
   
 });
