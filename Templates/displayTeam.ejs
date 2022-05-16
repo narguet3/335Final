@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<title>Team Display</title>
+</head>
+
+<body>
+    <h1>Here's Your Pokemon Team!!!</h1>
+    <%- table %>
+    <br>
+    <form action="/processRemove" method="post"> 
+		<input type="submit" value="Clear Team"/>
+	</form>
+    <br>
+
+
+    <a href="/team">Add More Pokemon To Your Team</a>
+    <br>
+    <a href="/">HOME</a> 
+
+</body>
+    
+</html>

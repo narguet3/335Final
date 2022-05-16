@@ -31,9 +31,53 @@ app.set("views", path.resolve(__dirname, "Templates"));
 app.set("view engine", "ejs");
 const PORT = process.env.PORT || 5000;
 
+
+
+//helper functions
+//insert pokemon to MongoDB
+async function insertPokemon(client, databaseAndCollection, newPokemon) {
+  try{
+      await client.connect();
+      await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).insertOne(newPokemon);
+  } catch (e) {
+      console.error(e);
+  } finally {
+      await client.close();
+  }
+}
+//get all pokemon from MongoDB
+async function allPokemon(client, databaseAndCollection) {
+  try{
+      await client.connect();
+      let filter = {};
+      var cursor = await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).find(filter);
+      const result = await cursor.toArray();
+      return result;
+  } catch (e) {
+      console.error(e);
+  } finally {
+      await client.close();
+  }
+}
+//clear team
+async function deleteAll(client, databaseAndCollection){
+  try{
+      await client.connect();
+      let filter = {};
+      await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).deleteMany(filter);
+  } catch (e) {
+      console.error(e);
+  } finally {
+      await client.close();
+  }
+}
+
+
+
+
 //Setting up index page
 app.get("/", (request, response) => {
-    response.render("index", {error:""});
+    response.render("index");
   });
 
 app.use(bodyParser.urlencoded({extended:false}));
@@ -44,10 +88,6 @@ app.post("/", function(request, res) {
   P.getPokemonByName(pokemon.trim().toLowerCase())
     .then((response) => {
     let output = "<h2>Pokemon Stats</h2><br>";
-
-    output += `<img src="${response.sprites.front_default}" alt="pokemon_front" height=200></img>`;
-    output += `<img src="${response.sprites.back_default}" alt="pokemon_back" height=200></img>`;
-
     output += "<table border=1>";
     output += `<tr><td>Name</td><td>${response.name}</td></tr>`;
 
@@ -81,9 +121,8 @@ app.post("/", function(request, res) {
     output += "</table>";
     res.render("displayPokemon", {table: output});
   })
-  .catch(() => {
-    let msg = "Pokemon not found.<br>List of all Pokemon: <a href=\"https://www.serebii.net/pokemon/nationalpokedex.shtml\">https://www.serebii.net/pokemon/nationalpokedex.shtml</a>";
-    res.render('index', {error:msg});
+  .catch((error) => {
+    console.log("Pokemon not found");
   });
   
 });
@@ -92,23 +131,62 @@ app.get("/team", (request, response) => {
   response.render("team");
 });
 
-app.post("/team", (request, response) => {
-  let {pokemon} =  request.body;
 
+//add pokemon to team
+app.post("/team", async function (request, response) {
+  //making pokemon object to add to MongoDB
+  let {pokemon} =  request.body;
+  let typeOutput = "";
+
+  let pokemonObject = {
+    name: "",
+    type: "",
+  }
+
+  //get pokemon from api and add to object
   P.getPokemonByName(pokemon.trim().toLowerCase())
     .then((response) => {
-      let name = response.name;
-      let sprite = response.sprites.front_default;
+    pokemonObject.name = response.name; 
 
-      // For Nick Papi
-      // Add pokemon name and sprite to Mongo database 
-      // Display the user's team by listing the database and response.render
-    })
-    .catch((error) => {
-      console.log("Pokemon not found");
-      window.location.reload();
+    response.types.forEach(element => {
+      typeOutput += `${element.type.name}, `;
     });
+    
+    typeOutput = typeOutput.slice(0, -2);
+
+    pokemonObject.type = typeOutput;
+
+  })
+  .catch((error) => {
+    console.log("idk bruhh");
+  });
+
+
+  //Add pokemon to Mongo database 
+  insertPokemon(client, databaseAndCollection, pokemonObject);
+  response.render("processPokemon");
 
 });
+
+//displays table with the team
+app.get ("/displayTeam" , async function (request, response) {
+  //create team table
+  let allTheMfs = await allPokemon(client, databaseAndCollection);
+  let table = "<table border = '1'> <tr> <th> Name </th> <th> Type </th> <tr>";
+
+  allTheMfs.forEach (poke => table += "<tr> <td>" + poke.name + "</td> <td>" + poke.type + "</td> </tr>");
+  table += "</table>";
+
+  response.render("displayTeam", {table: table});
+});
+
+//clear pokemon team
+app.post ("/processRemove" , async function (request, response) {
+
+  deleteAll(client, databaseAndCollection);
+
+  response.render("processRemove");
+});
+
   
 let webServer = http.createServer(app).listen(PORT); 
